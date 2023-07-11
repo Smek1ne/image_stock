@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "social_django",
     "django_extensions",
+    "images",
+    "easy_thumbnails",
+
 ]
 
 MIDDLEWARE = [
@@ -138,4 +141,4 @@ AUTHENTICATION_BACKENDS = [
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = \
     '963880859480-ihlntqgd9kfpjt4eq67rjubu699dopm5.apps.googleusercontent.com'
-OCIAL_AUTH_GOOGLE_OAUTH2_SECRET =  "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"
+OCIAL_AUTH_GOOGLE_OAUTH2_SECRET = "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"
