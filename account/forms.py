@@ -23,7 +23,7 @@ class UserRegistrationForm(forms.ModelForm):
         return cd["password"]
 
     def clean_email(self):
-        email = self.cleanded_data["email"]
+        email = self.cleaned_data["email"]
         if User.objects.filter(email=email).exists():
             raise forms.ValidatonError("Email already in use.")
         return email
@@ -35,7 +35,7 @@ class UserEditForm(forms.ModelForm):
         fields = ["first_name", "last_name", "email"]
 
     def clean_email(self):
-        email = self.cleanded_data["email"]
+        email = self.cleaned_data["email"]
         qs = User.objects.exclude(id=self.instance.id).filter(email=email)
         if qs.exists():
             raise forms.ValidationError("Email already in use")
