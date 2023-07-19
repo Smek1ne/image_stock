@@ -6,6 +6,8 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.http import require_POST
 
+from actions.models import Action
+from actions.utils import create_action
 from .forms import (
     LoginForm,
     UserRegistrationForm,
@@ -34,11 +36,25 @@ def user_login(request):
     else:
         form = LoginForm()
 
-        return render(request, "account/templates/login.html", {"form": form})
+        return render(request, "login.html", {"form": form})
 
 
 @login_required
 def dashboard(request):
+    actions = Action.objects.exclude(request.user)
+    following_ids = request.user.following.values_list("id", flat=True)
+
+    if following_ids:
+        actions = actions.filter(user_id__in=following_ids)
+        actions = actions.select_related(
+            "user", "user__profile"
+        ).prefetch_related("target")[:10]
+
+        return render(
+            request,
+            "account/dashboard.html",
+            {"section": "dashboard", "actions": actions},
+        )
     return render(request, "account/dashboard.html", {"section": "dashboard"})
 
 
@@ -50,6 +66,7 @@ def register(request):
             new_user.set_password(user_form.cleaned_data["password"])
             new_user.save()
             Profile.objects.create(user=new_user)
+            create_action(request.user, "has created an account")
             return render(
                 request, "account/register_done.html", {"user_form": user_form}
             )
@@ -119,6 +136,7 @@ def user_follow(request):
                 Contact.objects.get_or_create(
                     user_from=request.user, user_to=user
                 )
+                create_action(request.user, "is following", user)
             else:
                 Contact.objects.filter(
                     user_from=request.user, user_to=user

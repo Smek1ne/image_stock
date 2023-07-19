@@ -7,6 +7,7 @@ from django.views.decorators.http import require_POST
 
 from .forms import ImageCreateForm
 from .models import Image
+from actions.utils import create_action
 
 
 @login_required
@@ -17,6 +18,7 @@ def create_image(request):
             image = form.save(commit=False)
             image.user = request.user
             image.save()
+            create_action(request.user, "bookmarks", image)
             messages.success(request, "Image created successfully")
             return redirect(image.get_absolute_url())
     else:
@@ -34,7 +36,7 @@ def image_detail(request, id, slug):
     return render(
         request,
         "images/image/detail.html",
-        {"section": "images", "image": image}
+        {"section": "images", "image": image},
     )
 
 
@@ -49,6 +51,7 @@ def image_like(request):
             image = Image.objects.get(id=image_id)
             if action == "like":
                 image.users_like.add(request.user)
+                create_action(request.user, "likes", image)
             else:
                 image.users_like.remove(request.user)
             return JsonResponse({"status": "ok"})
