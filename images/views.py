@@ -1,3 +1,5 @@
+import redis
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -5,9 +7,13 @@ from django.http import JsonResponse, HttpResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.http import require_POST
 
+from actions.utils import create_action
 from .forms import ImageCreateForm
 from .models import Image
-from actions.utils import create_action
+
+r = redis.Redis(
+    host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB
+)
 
 
 @login_required
@@ -33,10 +39,12 @@ def create_image(request):
 
 def image_detail(request, id, slug):
     image = get_object_or_404(Image, id=id, slug=slug)
+    total_views = r.incr(f"image:{image.id}:views")
+    r.zincrby("image_ranking", 1, image.id)
     return render(
         request,
         "images/image/detail.html",
-        {"section": "images", "image": image},
+        {"section": "images", "image": image, "total_views": total_views},
     )
 
 
@@ -88,3 +96,18 @@ def image_list(request):
         doc = "images/image/list.html"
 
     return render(request, doc, {"section": images, "images": images})
+
+
+@login_required
+def image_ranking(request):
+    """Most viewed images"""
+    images = r.zrange("image_ranking", 0, -1, desc=True)[:10]
+    images_ids = [int(image_id) for image_id in images]
+    images = list(Image.objects.filter(id__in=images_ids))
+    images.sort(key=lambda x: images_ids.index(x.id))
+
+    return render(
+        request,
+        "images/image/rating.html",
+        {"section": images, "most_viewed_images": images},
+    )

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+
 from django.urls import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -44,9 +45,12 @@ INSTALLED_APPS = [
     "images",
     "easy_thumbnails",
     "actions",
+    "debug_toolbar",
+
 ]
 
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -143,8 +147,17 @@ AUTHENTICATION_BACKENDS = [
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = (
     "963880859480-ihlntqgd9kfpjt4eq67rjubu699dopm5.apps.googleusercontent.com"
 )
-OCIAL_AUTH_GOOGLE_OAUTH2_SECRET = "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"
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = "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"
 
 ABSOLUTE_URL_OVERRIDES = {
     "auth.user": lambda u: reverse_lazy("user_detail", args=[u.username])
 }
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+
+]
+
+REDIS_HOST = "localhost"
+REDIS_PORT = 6379
+REDIS_DB = 0
